@@ -3388,6 +3388,30 @@ keybind: Keybinds = .{},
 /// Changing this option at runtime only applies to new windows.
 @"macos-titlebar-style": MacTitlebarStyle = .transparent,
 
+/// The background color of the active tab when `macos-titlebar-style` is set
+/// to `tabs`. When unset, the active tab background is derived automatically
+/// from the terminal background color.
+///
+/// Specified as either hex (`#RRGGBB` or `RRGGBB`) or a named X11 color.
+@"macos-titlebar-tab-active-color": ?Color = null,
+
+/// The opacity of the active tab background when `macos-titlebar-style` is
+/// set to `tabs`. A value of 1.0 is fully opaque and 0.0 is fully transparent.
+/// This only takes effect if `macos-titlebar-tab-active-color` is set.
+@"macos-titlebar-tab-active-opacity": f64 = 1.0,
+
+/// The background color of inactive tabs when `macos-titlebar-style` is set
+/// to `tabs`. When unset, the inactive tab background is derived automatically
+/// from the terminal background color.
+///
+/// Specified as either hex (`#RRGGBB` or `RRGGBB`) or a named X11 color.
+@"macos-titlebar-tab-inactive-color": ?Color = null,
+
+/// The opacity of inactive tab backgrounds when `macos-titlebar-style` is
+/// set to `tabs`. A value of 1.0 is fully opaque and 0.0 is fully transparent.
+/// This only takes effect if `macos-titlebar-tab-inactive-color` is set.
+@"macos-titlebar-tab-inactive-opacity": f64 = 1.0,
+
 /// Whether the proxy icon in the macOS titlebar is visible. The proxy icon
 /// is the icon that represents the folder of the current working directory.
 /// You can see this very clearly in the macOS built-in Terminal.app

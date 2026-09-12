@@ -564,6 +564,10 @@ class TerminalController: BaseTerminalController, TabGroupCloseCoordinator.Contr
             // Update our derived config
             self.derivedConfig = DerivedConfig(config)
 
+            // Update the window's derived config so live-updatable settings
+            // (such as macOS tab background colors) apply immediately.
+            (window as? TerminalWindow)?.configDidChange(config)
+
             // If we have no surfaces in our window (is that possible?) then we update
             // our window appearance based on the root config. If we have surfaces, we
             // don't call this because focused surface changes will trigger appearance updates.

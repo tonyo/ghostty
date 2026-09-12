@@ -68,6 +68,14 @@ class TerminalWindow: NSWindow {
         }
     }
 
+    // MARK: Config
+
+    /// Called when the global configuration changes. Subclasses can override
+    /// to react to live config updates.
+    func configDidChange(_ config: Ghostty.Config) {
+        derivedConfig = .init(config)
+    }
+
     // MARK: NSWindow Overrides
 
     override var toolbar: NSToolbar? {
@@ -589,6 +597,10 @@ class TerminalWindow: NSWindow {
         let macosWindowButtons: Ghostty.MacOSWindowButtons
         let macosTitlebarStyle: Ghostty.Config.MacOSTitlebarStyle
         let windowCornerRadius: CGFloat
+        let macosTitlebarTabActiveColor: NSColor?
+        let macosTitlebarTabActiveOpacity: Double
+        let macosTitlebarTabInactiveColor: NSColor?
+        let macosTitlebarTabInactiveOpacity: Double
 
         init() {
             self.title = nil
@@ -598,6 +610,10 @@ class TerminalWindow: NSWindow {
             self.backgroundBlur = .disabled
             self.macosTitlebarStyle = .default
             self.windowCornerRadius = 16
+            self.macosTitlebarTabActiveColor = nil
+            self.macosTitlebarTabActiveOpacity = 1
+            self.macosTitlebarTabInactiveColor = nil
+            self.macosTitlebarTabInactiveOpacity = 1
         }
 
         init(_ config: Ghostty.Config) {
@@ -607,6 +623,10 @@ class TerminalWindow: NSWindow {
             self.macosWindowButtons = config.macosWindowButtons
             self.backgroundBlur = config.backgroundBlur
             self.macosTitlebarStyle = config.macosTitlebarStyle
+            self.macosTitlebarTabActiveColor = config.macosTitlebarTabActiveColor
+            self.macosTitlebarTabActiveOpacity = config.macosTitlebarTabActiveOpacity
+            self.macosTitlebarTabInactiveColor = config.macosTitlebarTabInactiveColor
+            self.macosTitlebarTabInactiveOpacity = config.macosTitlebarTabInactiveOpacity
 
             // Set corner radius based on macos-titlebar-style
             // Native, transparent, and hidden styles use 16pt radius

@@ -82,6 +82,7 @@ class TitlebarTabsVenturaTerminalWindow: TerminalWindow {
 
         if titlebarTabs {
             updateTabsForVeryDarkBackgrounds()
+            updateTabBackgroundColors()
             // This is called when we open, close, switch, and reorder tabs, at which point we determine if the
             // first tab in the tab bar is selected. If it is, we make the `windowButtonsBackdrop` color the same
             // as that of the active tab (i.e. the titlebar's background color), otherwise we make it the same
@@ -136,6 +137,12 @@ class TitlebarTabsVenturaTerminalWindow: TerminalWindow {
     }
 
     // MARK: Appearance
+
+    override func configDidChange(_ config: Ghostty.Config) {
+        super.configDidChange(config)
+        updateTabBackgroundColors()
+        windowButtonsBackdrop?.updateColor()
+    }
 
     override func syncAppearance(_ surfaceConfig: Ghostty.SurfaceView.DerivedConfig) {
         super.syncAppearance(surfaceConfig)
@@ -233,6 +240,40 @@ class TitlebarTabsVenturaTerminalWindow: TerminalWindow {
 			titlebarContainer.layer?.backgroundColor = titlebarColor.cgColor
 		}
 	}
+
+    /// Applies user-configured background colors to the active and inactive tabs.
+    /// This is a no-op unless `macos-titlebar-tab-active-color` or
+    /// `macos-titlebar-tab-inactive-color` is set and `macos-titlebar-style` is `tabs`.
+    private func updateTabBackgroundColors() {
+        guard titlebarTabs else { return }
+        guard let titlebarContainer else { return }
+        guard let tabGroup = tabGroup, tabGroup.isTabBarVisible else { return }
+
+        let activeColor = derivedConfig.macosTitlebarTabActiveColor
+        let inactiveColor = derivedConfig.macosTitlebarTabInactiveColor
+        guard activeColor != nil || inactiveColor != nil else { return }
+
+        // The active tab background lives in the last subview of the tab bar container.
+        // Inactive tab backgrounds live inside each NSTabButton.
+        guard let tabButton = titlebarContainer.firstDescendant(withClassName: "NSTabButton"),
+              let tabBarContainer = tabButton.superview else { return }
+
+        if let activeColor, let activeContainer = tabBarContainer.subviews.last,
+           let activeBackgroundView = activeContainer.firstDescendant(withID: "_backgroundView") {
+            activeBackgroundView.layer?.backgroundColor = activeColor
+                .withAlphaComponent(derivedConfig.macosTitlebarTabActiveOpacity)
+                .cgColor
+        }
+
+        if let inactiveColor {
+            for tabButton in tabBarContainer.descendants(withClassName: "NSTabButton") {
+                guard let backgroundView = tabButton.firstDescendant(withID: "_backgroundView") else { continue }
+                backgroundView.layer?.backgroundColor = inactiveColor
+                    .withAlphaComponent(derivedConfig.macosTitlebarTabInactiveOpacity)
+                    .cgColor
+            }
+        }
+    }
 
     // MARK: - Titlebar Font
 
@@ -499,22 +540,38 @@ private class WindowButtonsBackdropView: NSView {
     private let overlayLayer = VibrantLayer()
 
     var isHighlighted: Bool = true {
-        didSet {
-            guard let terminalWindow else { return }
+        didSet { updateColor() }
+    }
 
-            if isLightTheme {
-                overlayLayer.isHidden = isHighlighted
-                layer?.backgroundColor = .clear
-            } else {
-				let systemOverlayColor = NSColor(cgColor: CGColor(genericGrayGamma2_2Gray: 0.0, alpha: 0.45))!
-				let titlebarBackgroundColor = terminalWindow.titlebarColor.blended(withFraction: 1, of: systemOverlayColor)
+    /// Re-evaluates the backdrop color. Call this when the configuration changes
+    /// so that newly-configured tab background colors are applied immediately.
+    fileprivate func updateColor() {
+        guard let terminalWindow else { return }
 
-				let highlightedColor = terminalWindow.hasVeryDarkBackground ? terminalWindow.backgroundColor : .clear
-				let backgroundColor = terminalWindow.hasVeryDarkBackground ? titlebarBackgroundColor : systemOverlayColor
+        // If the user has configured tab background colors, match the backdrop
+        // to the active or inactive tab color as appropriate.
+        let activeColor = terminalWindow.derivedConfig.macosTitlebarTabActiveColor?
+            .withAlphaComponent(terminalWindow.derivedConfig.macosTitlebarTabActiveOpacity)
+        let inactiveColor = terminalWindow.derivedConfig.macosTitlebarTabInactiveColor?
+            .withAlphaComponent(terminalWindow.derivedConfig.macosTitlebarTabInactiveOpacity)
+        if let configuredColor = isHighlighted ? activeColor : inactiveColor {
+            overlayLayer.isHidden = true
+            layer?.backgroundColor = configuredColor.cgColor
+            return
+        }
 
-                overlayLayer.isHidden = true
-				layer?.backgroundColor = isHighlighted ? highlightedColor?.cgColor : backgroundColor?.cgColor
-            }
+        if isLightTheme {
+            overlayLayer.isHidden = isHighlighted
+            layer?.backgroundColor = .clear
+        } else {
+			let systemOverlayColor = NSColor(cgColor: CGColor(genericGrayGamma2_2Gray: 0.0, alpha: 0.45))!
+			let titlebarBackgroundColor = terminalWindow.titlebarColor.blended(withFraction: 1, of: systemOverlayColor)
+
+			let highlightedColor = terminalWindow.hasVeryDarkBackground ? terminalWindow.backgroundColor : .clear
+			let backgroundColor = terminalWindow.hasVeryDarkBackground ? titlebarBackgroundColor : systemOverlayColor
+
+            overlayLayer.isHidden = true
+			layer?.backgroundColor = isHighlighted ? highlightedColor?.cgColor : backgroundColor?.cgColor
         }
     }
 

@@ -361,6 +361,38 @@ extension Ghostty {
             return MacOSTitlebarStyle(rawValue: String(cString: ptr)) ?? defaultValue
         }
 
+        var macosTitlebarTabActiveColor: NSColor? {
+            guard let config = self.config else { return nil }
+            var v: ghostty_config_color_s = .init()
+            let key = "macos-titlebar-tab-active-color"
+            guard ghostty_config_get(config, &v, key, UInt(key.lengthOfBytes(using: .utf8))) else { return nil }
+            return .init(ghostty: v)
+        }
+
+        var macosTitlebarTabActiveOpacity: Double {
+            guard let config = self.config else { return 1 }
+            var v: Double = 1
+            let key = "macos-titlebar-tab-active-opacity"
+            _ = ghostty_config_get(config, &v, key, UInt(key.lengthOfBytes(using: .utf8)))
+            return v
+        }
+
+        var macosTitlebarTabInactiveColor: NSColor? {
+            guard let config = self.config else { return nil }
+            var v: ghostty_config_color_s = .init()
+            let key = "macos-titlebar-tab-inactive-color"
+            guard ghostty_config_get(config, &v, key, UInt(key.lengthOfBytes(using: .utf8))) else { return nil }
+            return .init(ghostty: v)
+        }
+
+        var macosTitlebarTabInactiveOpacity: Double {
+            guard let config = self.config else { return 1 }
+            var v: Double = 1
+            let key = "macos-titlebar-tab-inactive-opacity"
+            _ = ghostty_config_get(config, &v, key, UInt(key.lengthOfBytes(using: .utf8)))
+            return v
+        }
+
         var macosTitlebarProxyIcon: MacOSTitlebarProxyIcon {
             let defaultValue = MacOSTitlebarProxyIcon.visible
             guard let config = self.config else { return defaultValue }
