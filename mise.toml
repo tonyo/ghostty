@@ -1,0 +1,7 @@
+[settings]
+lockfile = true
+
+[tools]
+zig = "0.16.0"
+swiftlint = "0.65.1"
+swift = "6.0.3"
